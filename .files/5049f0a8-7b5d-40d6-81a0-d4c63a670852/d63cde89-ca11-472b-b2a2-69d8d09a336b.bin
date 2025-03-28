@@ -1,0 +1,42 @@
+from agents.tool import function_tool
+import requests
+
+######### function calling #######
+@function_tool("product_finder")
+def product_finder(product_query: str) -> str:
+    """
+    Find product details from the API based on the user's query (e.g., product name or ID).
+    Returns all available product details for the LLM to process.
+    
+    Args:
+        product_query (str): The product name or ID to search for.
+    
+    Returns:
+        str: Full product details if found, otherwise an error message.
+    """
+    url = "https://template1-neon-nu.vercel.app/api/products"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        products = response.json()
+        
+        for product in products:
+            if (product_query.lower() in product.get("name", "").lower() or 
+                product_query == str(product.get("id", ""))):
+                # Return all relevant details as a formatted string
+                colors = ", ".join(product.get("colors", []))
+                sizes = ", ".join(product.get("sizes", []))
+                return (
+                    f"Product: {product.get('name')}\n"
+                    f"Price: ${product.get('price', 'N/A')}\n"
+                    f"Colors: {colors}\n"
+                    f"Sizes: {sizes}\n"
+                    f"Description: {product.get('description', 'N/A')}\n"
+                    f"Category: {product.get('category', 'N/A')}"
+                )
+        
+        return "Product not found."
+    
+    except requests.exceptions.RequestException as e:
+        return f"Error fetching data from API: {str(e)}"
