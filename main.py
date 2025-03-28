@@ -1,30 +1,18 @@
 from typing import cast
 import chainlit as cl
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
+from agents import Agent, Runner
 from agents.run import RunConfig
 
 from tools import product_finder, get_all_products_and_categories, get_discount
-from connection import gemini_api_key
+from connection import config, model, external_client
 
 @cl.on_chat_start
 async def on_chart_start():
-    external_client = AsyncOpenAI(
-        api_key = gemini_api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
-    model = OpenAIChatCompletionsModel(
-        model = "gemini-2.0-flash",
-        openai_client = external_client
-    )
-    config = RunConfig(
-        model = model,
-        model_provider = external_client,
-        tracing_disabled = True
-    )
-
+    # Setting the session variables on every new session
     cl.user_session.set('chat_history', [])
     cl.user_session.set('config', config)
 
+    # Initialize the agent with the model and tools
     agent: Agent = Agent(
         name = 'Assistant', 
         instructions = 'You are a helpful shopping assistant/agent. You can provide information about products like their name, price, color,size etc'
