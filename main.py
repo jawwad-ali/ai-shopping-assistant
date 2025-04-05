@@ -2,24 +2,17 @@ from typing import cast
 import chainlit as cl
 from agents import Agent, Runner
 from agents.run import RunConfig
+from connection import config
 
-from tools import product_finder, get_all_products_and_categories, get_discount
-from connection import config, model, external_client
+# Custom module
+from agent import agent, billing_agent, second_agent
 
 @cl.on_chat_start
 async def on_chart_start():
+
     # Setting the session variables on every new session
     cl.user_session.set('chat_history', [])
     cl.user_session.set('config', config)
-
-    # Initialize the agent with the model and tools
-    agent: Agent = Agent(
-        name = 'Assistant', 
-        instructions = 'You are a helpful shopping assistant/agent. You can provide information about products like their name, price, color,size etc'
-                        ' answer questions', 
-        model = model,
-        tools=[product_finder, get_all_products_and_categories, get_discount]
-        )
     cl.user_session.set('agent', agent)
 
     await cl.Message(content="Welcome to the Ali Shopping Store! How can I help you today?").send()
@@ -36,10 +29,14 @@ async def main(message: cl.Message):
     history.append({'role': 'user' , 'content': message.content})
 
     try:
-        print("\n[CALLING_AGENT_WITH_CONTEXT]\n", history, "\n")
-        result = Runner.run_sync(starting_agent = agent,
+        # print("\n[CALLING_AGENT_WITH_CONTEXT]\n", history, "\n")
+        #####################  First Agent #####################
+        
+        result = Runner.run_sync(
+                    starting_agent = agent,
                     input=history,
-                    run_config=config)
+                    run_config=config
+                )
         
         response_content = result.final_output
         
@@ -50,6 +47,25 @@ async def main(message: cl.Message):
         # Update the session with the new history.
         cl.user_session.set("chat_history", result.to_input_list())
         
+
+        #####################  Second Agent #####################
+        
+        if 'generate bill' in message.content:
+            billing_agent_result = Runner.run_sync(
+                # starting_agent = billing_agent,
+                starting_agent = second_agent,
+                input = history,
+                run_config = config
+            )
+            
+            billing_agent_response = billing_agent_result.final_output 
+            print('second Agent' , billing_agent_response)
+            
+            msg.content = billing_agent_response
+            await msg.update()
+        # msg.content = billing_agent_response
+        # await msg.update()
+
         # Optional: Log the interaction
         # print(f"User: {message.content}")
         # print(f"Assistant: {response_content}")
