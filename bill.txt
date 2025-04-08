@@ -1,2 +1,18 @@
-Product Details:
-product name	original price	discount	discounted price
+Product Name: Price: Discount: Discounted Price: Description:
+Classic White Pullover Hoodie: 150 : 10% : 135.00 : This white pullover hoodie offers a clean, minimalist look with its soft fabric and timeless design.
+
+Total: 135.00
+
+Product Name: Price: Discount: Discounted Price: Description:
+Classic White Pullover Hoodie: 150 : 10% : 135.00 : Blue color and S size
+
+Total: 135.00Product Name: Price: Discount: Discounted Price: Description:
+Classic Black Straight-Leg Jeans: 170 : 16% : 142.80 : Yellow color and L size
+
+Total: 142.80
+
+Product Name: Price: Discount: Discounted Price: Description:
+Classic Black Straight-Leg Jeans: 170 : 16% : 142.80 : Jeans in Blue color and L size
+
+Total: 142.80
+

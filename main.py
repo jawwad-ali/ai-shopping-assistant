@@ -5,7 +5,7 @@ from agents.run import RunConfig
 from connection import config
 
 # Custom module
-from agent import agent, billing_agent, second_agent
+from agent import agent, billing_agent
 
 @cl.on_chat_start
 async def on_chart_start():
@@ -29,10 +29,8 @@ async def main(message: cl.Message):
     history.append({'role': 'user' , 'content': message.content})
 
     try:
-        # print("\n[CALLING_AGENT_WITH_CONTEXT]\n", history, "\n")
-        #####################  First Agent #####################
-        
-        result = Runner.run_sync(
+        ### First Agent
+        result = await Runner.run(
                     starting_agent = agent,
                     input=history,
                     run_config=config
@@ -46,30 +44,25 @@ async def main(message: cl.Message):
     
         # Update the session with the new history.
         cl.user_session.set("chat_history", result.to_input_list())
-        
 
-        #####################  Second Agent #####################
+        ###  Second Agent
         
         if 'generate bill' in message.content:
-            billing_agent_result = Runner.run_sync(
-                # starting_agent = billing_agent,
-                starting_agent = second_agent,
-                input = history,
+            billing_agent_result = await Runner.run(
+                starting_agent = billing_agent,
+                input = history + [{
+                    "role": "user",
+                    "content": "place the order and generate bill for the product I have purchased. Donot generate bill for the entire "
+                    "store products. Only generate the bill for one product at a time"
+                }],
                 run_config = config
             )
-            
-            billing_agent_response = billing_agent_result.final_output 
-            print('second Agent' , billing_agent_response)
-            
-            msg.content = billing_agent_response
-            await msg.update()
-        # msg.content = billing_agent_response
-        # await msg.update()
 
-        # Optional: Log the interaction
-        # print(f"User: {message.content}")
-        # print(f"Assistant: {response_content}")
-        
+            print("Async agent <==>",billing_agent_result.final_output)
+
+            msg.content = billing_agent_result.final_output
+            await msg.update()
+
     except Exception as e:
         msg.content = f"Error: {str(e)}"
         await msg.update()

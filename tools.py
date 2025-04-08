@@ -1,5 +1,6 @@
 from agents.tool import function_tool
 import requests
+from model import Product
 
 url = "https://template1-neon-nu.vercel.app/api/products"
 
@@ -90,3 +91,40 @@ def get_discount(product_name: str) -> str:
     
     except requests.exceptions.RequestException as e:
         return f"Error fetching data from API: {str(e)}"
+    
+@function_tool('billing_agent_handoff')
+def billing_agent_handoff(products: list[Product]):
+    """
+    Creates or overwrites a bill.txt file with product billing details, including discounts if provided.
+
+    :param products: List of Product class or dictionaries (name, price, discount, description)
+                     If no discount, use 0 as the discount.
+    """
+    try:
+        total = 0
+        with open("bill.txt", "a") as file:
+            # Write the header once, formatted for the output
+            file.write("Product Name: Price: Discount: Discounted Price: Description:\n")
+            
+            # `Product` is a class with attributes like `name`, `price`, `discount`, and `description`
+            for product in products:
+                # Access the attributes of the `Product` Tuple
+                name = product.name
+                price = product.price
+                discount = product.discount
+                description = product.description
+    
+                # Calculate discounted price
+                discounted_price = price * (1 - discount / 100) if discount > 0 else price
+                total += discounted_price
+    
+                # Write product details in the desired format
+                file.write(f"{name}: {price} : {discount}% : {discounted_price:.2f} : {description}\n")
+            
+            # Write the total at the end
+            file.write(f"\nTotal: {total:.2f}\n\n")
+        
+        print("Bill generated successfully at 'bill.txt'.")
+    
+    except Exception as e:
+        print(f"Error generating bill: {str(e)}")
